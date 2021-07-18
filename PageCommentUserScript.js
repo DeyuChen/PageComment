@@ -38,48 +38,20 @@ function sendPageComment(nickname, comment, destination) {
 
 window.addEventListener('load', function() {
     $("body").append('                                                  \
-        <style>                                                         \
-        .pageCommentNicknameStyle {                                     \
-            background-color: Transparent;                              \
-            float: left;                                                \
-        }                                                               \
-        </style>                                                        \
-    ');
-    $("body").append('                                                  \
-        <style>                                                         \
-        .pageCommentInputStyle {                                        \
-            background-color: Transparent;                              \
-            float: left;                                                \
-            margin-left: 5px                                            \
-        }                                                               \
-        </style>                                                        \
-    ');
-    $("body").append('                                                  \
-        <style>                                                         \
-        .pageCommentButtonStyle {                                       \
-            background-color: Transparent;                              \
-            float: right;                                               \
-        }                                                               \
-        </style>                                                        \
-    ');
-    $("body").append('                                                  \
         <div id="gmRightSideBar">                                       \
-            <div id="readCommentDiv"></div>                             \
+            <div id="readCommentDiv"/>                                  \
             </br>                                                       \
             <div id="writeCommentDiv">                                  \
                 <input type="text"                                      \
                      id="pageCommentNickname"                           \
-                     class=pageCommentNicknameStyle                     \
                      size=8                                             \
                      maxlength=15                                       \
                      value="Anonymous">                                 \
                 <input type="text"                                      \
                      id="pageCommentInput"                              \
-                     class=pageCommentInputStyle                        \
                      maxlength=50>                                      \
                 <button                                                 \
-                     id="pageCommentSend"                               \
-                     class=pageCommentButtonStyle>Send</button>         \
+                     id="pageCommentSend">Send</button>                 \
             </div>                                                      \
         </div>                                                          \
     ');
@@ -96,6 +68,7 @@ window.addEventListener('load', function() {
     );
     rightSideBar.fadeTo(2900, 0);
 
+    document.getElementById("readCommentDiv").style.maxHeight = window.innerHeight * 0.8 + 'px';
     readPageComment($('#readCommentDiv'));
     document.getElementById("pageCommentSend").onclick = function() {
         sendPageComment(
@@ -125,6 +98,41 @@ window.addEventListener('load', function() {
         }                                                               \
         #gmRightSideBar a {                                             \
             color:                  blue;                               \
+        }                                                               \
+        #pageCommentNickname {                                          \
+            background-color: #FED8B1;                                  \
+            float: left;                                                \
+        }                                                               \
+        #pageCommentInput {                                             \
+            background-color: #FED8B1;                                  \
+            float: left;                                                \
+            margin-left: 5px                                            \
+        }                                                               \
+        #pageCommentSend {                                              \
+            background-color: #FED8B1;                                  \
+            float: right;                                               \
+        }                                                               \
+        #readCommentDiv {                                               \
+            overflow: auto;                                             \
+        }                                                               \
+        #readCommentDiv::-webkit-scrollbar-track {                      \
+	        -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);          \
+	        background-color: #F5F5F5;                                  \
+        }                                                               \
+        #readCommentDiv::-webkit-scrollbar {                            \
+	        width: 10px;                                                \
+	        background-color: #F5F5F5;                                  \
+        }                                                               \
+        #readCommentDiv::-webkit-scrollbar-thumb {                      \
+	        background-color: #F90;	                                    \
+	        background-image: -webkit-linear-gradient(45deg,            \
+	            rgba(255, 255, 255, .2) 25%,                            \
+				transparent 25%,                                        \
+				transparent 50%,                                        \
+				rgba(255, 255, 255, .2) 50%,                            \
+				rgba(255, 255, 255, .2) 75%,                            \
+				transparent 75%,                                        \
+				transparent)                                            \
         }                                                               \
     ");
 }, false);
