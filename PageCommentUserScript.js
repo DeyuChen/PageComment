@@ -22,7 +22,6 @@ function sendPageComment(nickname, comment, destination) {
     if (nickname.value != "") {
         data['nickname'] = nickname.value;
     }
-    console.log(JSON.stringify(data));
     $.ajax({
         url: "https://28a2lzj9k1.execute-api.us-east-2.amazonaws.com/write",
         type: "PUT",
@@ -36,24 +35,71 @@ function sendPageComment(nickname, comment, destination) {
     });
 }
 
+function readPageTag(destination) {
+    destination.load("https://ts31palbs2.execute-api.us-west-2.amazonaws.com/read/" + getPageID());
+}
+
+function getValidTag(tag) {
+    tag = tag.toLowerCase();
+    tag = tag.replaceAll(' ', '');
+    if (tag.slice(0) === '#') {
+        tag = tag.slice(1);
+    }
+    return tag;
+}
+
+function sendPageTag(tag, destination) {
+    let validTag = getValidTag(tag.value);
+    if (validTag.length == 0) {
+        return;
+    }
+    let data = {"page_id":getPageID(),"hashtag":validTag};
+    $.ajax({
+        url: "https://ts31palbs2.execute-api.us-west-2.amazonaws.com/write",
+        type: "PUT",
+        crossDomain: true,
+        contentType: "application/json",
+        data: JSON.stringify(data),
+        success: function() {
+            readPageTag(destination);
+            tag.value=""
+        }
+    });
+}
+
 window.addEventListener('load', function() {
     $("body").append('                                                  \
-        <div id="gmRightSideBar">                                       \
-            <div id="readCommentDiv"/>                                  \
-            </br>                                                       \
-            <div id="writeCommentDiv">                                  \
-                <input type="text"                                      \
-                     id="pageCommentNickname"                           \
-                     size=8                                             \
-                     maxlength=15                                       \
-                     value="Anonymous">                                 \
-                <input type="text"                                      \
-                     id="pageCommentInput"                              \
-                     maxlength=50>                                      \
-                <button                                                 \
-                     id="pageCommentSend">Send</button>                 \
-            </div>                                                      \
+      <div id="gmRightSideBar">                                         \
+        <div id="sideBarTabs">                                          \
+          <div id="pageCommentTab" class="sideBarTab">PageComment</div> \
+          <div id="pageTagTab" class="sideBarTab">PageTag</div>         \
         </div>                                                          \
+        </br>                                                           \
+        <div id="pageCommentDiv">                                       \
+          <div id="readCommentDiv" class="readContentDiv"/>             \
+          </br>                                                         \
+          <div id="writeCommentDiv">                                    \
+            <input type="text"                                          \
+                   id="pageCommentNickname"                             \
+                   size=8                                               \
+                   maxlength=15                                         \
+                   value="Anonymous">                                   \
+            <input type="text"                                          \
+                   id="pageCommentInput"                                \
+                   maxlength=50>                                        \
+            <button id="pageCommentSend">Send</button>                  \
+          </div>                                                        \
+        </div>                                                          \
+        <div id="pageTagDiv">                                           \
+          <div id="readTagDiv" class="readContentDiv"/>                 \
+          </br>                                                         \
+            <input type="text"                                          \
+                   id="pageTagInput"                                    \
+                   maxlength=50>                                        \
+            <button id="pageTagSend">Tag</button>                       \
+          </div>                                                        \
+        </div>                                                          \
+      </div>                                                            \
     ');
 
     //-- Fade panel when not in use
@@ -68,8 +114,16 @@ window.addEventListener('load', function() {
     );
     rightSideBar.fadeTo(2900, 0);
 
+    // PageComment
+    document.getElementById("pageCommentTab").onclick = function() {
+        if (document.getElementById("pageCommentDiv").style.display == "block") {
+            return;
+        }
+        document.getElementById("pageCommentDiv").style.display = "block";
+        document.getElementById("pageTagDiv").style.display = "none";
+        readPageComment($('#readCommentDiv'));
+    }
     document.getElementById("readCommentDiv").style.maxHeight = window.innerHeight * 0.8 + 'px';
-    readPageComment($('#readCommentDiv'));
     document.getElementById("pageCommentSend").onclick = function() {
         sendPageComment(
             document.getElementById("pageCommentNickname"),
@@ -77,6 +131,25 @@ window.addEventListener('load', function() {
             $('#readCommentDiv')
         );
     }
+    readPageComment($('#readCommentDiv'));
+
+    // PageTag
+    document.getElementById("pageTagTab").onclick = function() {
+        if (document.getElementById("pageTagDiv").style.display == "block") {
+            return;
+        }
+        document.getElementById("pageTagDiv").style.display = "block";
+        document.getElementById("pageCommentDiv").style.display = "none";
+        readPageTag($('#readTagDiv'));
+    }
+    document.getElementById("readTagDiv").style.maxHeight = window.innerHeight * 0.8 + 'px';
+    document.getElementById("pageTagSend").onclick = function() {
+        sendPageTag(
+            document.getElementById("pageTagInput"),
+            $('#readTagDiv')
+        );
+    }
+
 
     GM_addStyle("                                                       \
         #gmRightSideBar {                                               \
@@ -108,22 +181,26 @@ window.addEventListener('load', function() {
             float: left;                                                \
             margin-left: 5px                                            \
         }                                                               \
-        #pageCommentSend {                                              \
+        #pageTagInput {                                                 \
+            background-color: #FED8B1;                                  \
+            float: left;                                                \
+        }                                                               \
+        #pageCommentSend, #pageTagSend {                                \
             background-color: #FED8B1;                                  \
             float: right;                                               \
         }                                                               \
-        #readCommentDiv {                                               \
+        .readContentDiv {                                               \
             overflow: auto;                                             \
         }                                                               \
-        #readCommentDiv::-webkit-scrollbar-track {                      \
+        .readContentDiv::-webkit-scrollbar-track {                      \
 	        -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);          \
 	        background-color: #F5F5F5;                                  \
         }                                                               \
-        #readCommentDiv::-webkit-scrollbar {                            \
+        .readContentDiv::-webkit-scrollbar {                            \
 	        width: 10px;                                                \
 	        background-color: #F5F5F5;                                  \
         }                                                               \
-        #readCommentDiv::-webkit-scrollbar-thumb {                      \
+        .readContentDiv::-webkit-scrollbar-thumb {                      \
 	        background-color: #F90;	                                    \
 	        background-image: -webkit-linear-gradient(45deg,            \
 	            rgba(255, 255, 255, .2) 25%,                            \
@@ -133,6 +210,17 @@ window.addEventListener('load', function() {
 				rgba(255, 255, 255, .2) 75%,                            \
 				transparent 75%,                                        \
 				transparent)                                            \
+        }                                                               \
+        .sideBarTab {                                                   \
+            display: inline-block;                                      \
+            width: 49%;                                                 \
+            text-align: center;                                         \
+        }                                                               \
+        .sideBarTab:hover {                                             \
+            color: red;                                                 \
+        }                                                               \
+        #pageTagDiv {                                                   \
+            display: none;                                              \
         }                                                               \
     ");
 }, false);
