@@ -13,8 +13,61 @@ function getPageID() {
     return page_id;
 }
 
+function removeAllChildNodes(parent) {
+    while (parent.firstChild) {
+        parent.removeChild(parent.firstChild);
+    }
+}
+
 function readPageComment(destination) {
-    destination.load("https://28a2lzj9k1.execute-api.us-east-2.amazonaws.com/read/" + getPageID());
+    $.ajax({
+        url: "https://28a2lzj9k1.execute-api.us-east-2.amazonaws.com/read/" + getPageID(),
+        type: "GET",
+        crossDomain: true,
+        success: function(result) {
+            removeAllChildNodes(destination);
+            let comments = JSON.parse(result)['comments'];
+            if (comments.length == 0) {
+                let p = document.createElement('p');
+                p.setAttribute("style", "color:blue");
+                p.textContent = "No comments yet";
+                destination.appendChild(p);
+            }
+            else {
+                comments.forEach(comment => {
+                    let user = document.createElement('p');
+                    user.setAttribute("style", "color:black");
+
+                    let nickname = document.createElement('b');
+                    nickname.textContent = comment['nickname'];
+                    user.appendChild(nickname);
+
+                    if (comment['sourceip'] != "") {
+                        let sourceip = document.createElement('small');
+                        sourceip.setAttribute("style", "color:gray");
+                        sourceip.textContent = ` (${comment['sourceip']})`;
+                        user.appendChild(sourceip);
+                    }
+
+                    let say = document.createElement('i');
+                    say.textContent = " says";
+                    user.appendChild(say);
+
+                    let timestamp = document.createElement('p');
+                    timestamp.setAttribute("style", "color:gray;font-size:10px");
+                    timestamp.textContent = `@ ${comment['timestamp']}`;
+
+                    let message = document.createElement('p');
+                    message.setAttribute("style", "color:blue;margin-bottom:5px");
+                    message.textContent = comment['comment'];
+
+                    destination.appendChild(user);
+                    destination.appendChild(timestamp);
+                    destination.appendChild(message);
+                })
+            }
+        }
+    });
 }
 
 function sendPageComment(nickname, comment, destination) {
@@ -36,7 +89,37 @@ function sendPageComment(nickname, comment, destination) {
 }
 
 function readPageTag(destination) {
-    destination.load("https://ts31palbs2.execute-api.us-west-2.amazonaws.com/read/" + getPageID());
+    $.ajax({
+        url: "https://ts31palbs2.execute-api.us-west-2.amazonaws.com/read/" + getPageID(),
+        type: "GET",
+        crossDomain: true,
+        success: function(result) {
+            removeAllChildNodes(destination);
+            let hashtags = JSON.parse(result)['hashtags'];
+            if (hashtags.length == 0) {
+                let p = document.createElement('p');
+                p.setAttribute("style", "color:blue");
+                p.textContent = "No tags yet";
+                destination.appendChild(p);
+            }
+            else {
+                hashtags.forEach(hashtag => {
+                    let tag = document.createElement('b');
+                    tag.setAttribute("style", "color:blue;font-weight:bold");
+                    tag.textContent = `#${hashtag['hashtag']} `;
+
+                    let popularity = document.createElement('span');
+                    popularity.setAttribute("style", "color:gray");
+                    popularity.textContent = `(${hashtag['popularity']})`;
+
+                    let p = document.createElement('p');
+                    p.appendChild(tag);
+                    p.appendChild(popularity);
+                    destination.appendChild(p);
+                })
+            }
+        }
+    });
 }
 
 function getValidTag(tag) {
@@ -121,17 +204,17 @@ window.addEventListener('load', function() {
         }
         document.getElementById("pageCommentDiv").style.display = "block";
         document.getElementById("pageTagDiv").style.display = "none";
-        readPageComment($('#readCommentDiv'));
+        readPageComment(document.getElementById("readCommentDiv"));
     }
     document.getElementById("readCommentDiv").style.maxHeight = window.innerHeight * 0.8 + 'px';
     document.getElementById("pageCommentSend").onclick = function() {
         sendPageComment(
             document.getElementById("pageCommentNickname"),
             document.getElementById("pageCommentInput"),
-            $('#readCommentDiv')
+            document.getElementById("readCommentDiv")
         );
     }
-    readPageComment($('#readCommentDiv'));
+    readPageComment(document.getElementById("readCommentDiv"));
 
     // PageTag
     document.getElementById("pageTagTab").onclick = function() {
@@ -140,13 +223,13 @@ window.addEventListener('load', function() {
         }
         document.getElementById("pageTagDiv").style.display = "block";
         document.getElementById("pageCommentDiv").style.display = "none";
-        readPageTag($('#readTagDiv'));
+        readPageTag(document.getElementById("readTagDiv"));
     }
     document.getElementById("readTagDiv").style.maxHeight = window.innerHeight * 0.8 + 'px';
     document.getElementById("pageTagSend").onclick = function() {
         sendPageTag(
             document.getElementById("pageTagInput"),
-            $('#readTagDiv')
+            document.getElementById("readTagDiv")
         );
     }
 
