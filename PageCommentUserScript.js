@@ -2,6 +2,8 @@
 // @name       Sidebar for Page Comments
 // @version    0.2
 // @description  Sidebar for Page Comments
+// @downloadURL https://github.com/DeyuChen/PageComment/blob/main/PageCommentUserScript.js
+// @updateURL https://github.com/DeyuChen/PageComment/blob/main/PageCommentUserScript.js
 // @match *://*/*
 // @require http://code.jquery.com/jquery-latest.js
 // @grant    GM_addStyle
