@@ -8,9 +8,28 @@
 // @noframes
 // ==/UserScript==
 
+function isYoutube() {
+    return window.location.hostname === "www.youtube.com";
+}
+
+function getYoutubeVideoID() {
+    return new URLSearchParams(window.location.search).get("v");
+}
+
 function getPageID() {
-    var page_id = (window.location.hostname + window.location.pathname).replaceAll('/', '$')
+    let page_id = (window.location.hostname + window.location.pathname).replaceAll('/', '$');
+    if (isYoutube()) {
+        page_id += getYoutubeVideoID();
+    }
     return page_id;
+}
+
+function getYoutubeTimeStamp() {
+    let ts = document.getElementById("movie_player").getCurrentTime();
+    let ts_s = Math.floor(ts) % 60;
+    let ts_m = Math.floor(ts / 60) % 60;
+    let ts_h = Math.floor(ts / 3600);
+    return `${ts_h}:${ts_m}:${ts_s}`;
 }
 
 function removeAllChildNodes(parent) {
@@ -116,6 +135,21 @@ function readPageTag(destination) {
                     p.appendChild(tag);
                     p.appendChild(popularity);
                     destination.appendChild(p);
+
+                    if ("tag_timestamps" in hashtag) {
+                        hashtag['tag_timestamps'].forEach(ts => {
+                            let timestamp = document.createElement('a');
+                            timestamp.setAttribute("style", "color:green;margin-left:10px");
+                            let hms = ts.split(":");
+                            timestamp.href =
+                                `${window.location.protocol}//${window.location.hostname}${window.location.pathname}` +
+                                `?v=${getYoutubeVideoID()}&t=${hms[0]}h${hms[1]}m${hms[2]}s`;
+                            timestamp.textContent = ts;
+                            let p =  document.createElement('p');
+                            p.appendChild(timestamp);
+                            destination.appendChild(p);
+                        })
+                    }
                 })
             }
         }
@@ -137,6 +171,9 @@ function sendPageTag(tag, destination) {
         return;
     }
     let data = {"page_id":getPageID(),"hashtag":validTag};
+    if (document.getElementById("pageTagTimeStamp").value.length > 0) {
+        data.tag_timestamp = document.getElementById("pageTagTimeStamp").value;
+    }
     $.ajax({
         url: "https://ts31palbs2.execute-api.us-west-2.amazonaws.com/write",
         type: "PUT",
@@ -176,10 +213,18 @@ window.addEventListener('load', function() {
         <div id="pageTagDiv">                                           \
           <div id="readTagDiv" class="readContentDiv"/>                 \
           </br>                                                         \
-            <input type="text"                                          \
-                   id="pageTagInput"                                    \
-                   maxlength=50>                                        \
-            <button id="pageTagSend">Tag</button>                       \
+            <div id="timeStampDiv" class="inputDiv">                                     \
+              <input type="text"                                        \
+                     id="pageTagTimeStamp"                              \
+                     size="6">                                          \
+              <button id="timeStampRefresh">Refresh</button>            \
+            </div>                                                      \
+            <div class="inputDiv">                                                       \
+              <input type="text"                                        \
+                     id="pageTagInput"                                  \
+                     maxlength=50>                                      \
+              <button id="pageTagSend">Tag</button>                     \
+            </div>                                                      \
           </div>                                                        \
         </div>                                                          \
       </div>                                                            \
@@ -221,6 +266,13 @@ window.addEventListener('load', function() {
         if (document.getElementById("pageTagDiv").style.display == "block") {
             return;
         }
+        if (isYoutube()) {
+            document.getElementById("timeStampDiv").style.display = "block";
+            document.getElementById("pageTagTimeStamp").value = getYoutubeTimeStamp();
+        }
+        else {
+            document.getElementById("timeStampDiv").style.display = "none";
+        }
         document.getElementById("pageTagDiv").style.display = "block";
         document.getElementById("pageCommentDiv").style.display = "none";
         readPageTag(document.getElementById("readTagDiv"));
@@ -231,6 +283,9 @@ window.addEventListener('load', function() {
             document.getElementById("pageTagInput"),
             document.getElementById("readTagDiv")
         );
+    }
+    document.getElementById("timeStampRefresh").onclick = function() {
+        document.getElementById("pageTagTimeStamp").value = getYoutubeTimeStamp();
     }
 
 
@@ -264,11 +319,15 @@ window.addEventListener('load', function() {
             float: left;                                                \
             margin-left: 5px                                            \
         }                                                               \
+        #pageTagTimeStamp {                                             \
+            background-color: #FED8B1;                                  \
+            float: left;                                                \
+        }                                                               \
         #pageTagInput {                                                 \
             background-color: #FED8B1;                                  \
             float: left;                                                \
         }                                                               \
-        #pageCommentSend, #pageTagSend {                                \
+        #pageCommentSend, #pageTagSend, #timeStampRefresh {             \
             background-color: #FED8B1;                                  \
             float: right;                                               \
         }                                                               \
@@ -304,6 +363,13 @@ window.addEventListener('load', function() {
         }                                                               \
         #pageTagDiv {                                                   \
             display: none;                                              \
+        }                                                               \
+        #timeStampDiv {                                                 \
+            margin-bottom: 10px;                                        \
+            display: none;                                              \
+        }                                                               \
+        .inputDiv {                                                     \
+            clear: both;                                                \
         }                                                               \
     ");
 }, false);
