@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name       Sidebar for Page Comments
-// @version    0.1
+// @version    0.2
 // @description  Sidebar for Page Comments
 // @match *://*/*
 // @require http://code.jquery.com/jquery-latest.js
