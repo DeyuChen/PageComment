@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name       Sidebar for Page Comments
-// @version    0.2
+// @version    0.3
 // @description  Sidebar for Page Comments
 // @downloadURL https://github.com/DeyuChen/PageComment/raw/main/PageCommentUserScript.user.js
 // @updateURL https://github.com/DeyuChen/PageComment/raw/main/PageCommentUserScript.user.js
@@ -19,11 +19,7 @@ function getYoutubeVideoID() {
 }
 
 function getPageID() {
-    let page_id = (window.location.hostname + window.location.pathname).replaceAll('/', '$');
-    if (isYoutube()) {
-        page_id += getYoutubeVideoID();
-    }
-    return page_id;
+    return window.location.hostname + window.location.pathname + window.location.search;
 }
 
 function getYoutubeTimeStamp() {
@@ -41,10 +37,13 @@ function removeAllChildNodes(parent) {
 }
 
 function readPageComment(destination) {
+    let data = { "page_id": getPageID() };
     $.ajax({
-        url: "https://28a2lzj9k1.execute-api.us-east-2.amazonaws.com/read/" + getPageID(),
-        type: "GET",
+        url: "https://28a2lzj9k1.execute-api.us-east-2.amazonaws.com/read",
+        type: "POST",
         crossDomain: true,
+        contentType: "application/json",
+        data: JSON.stringify(data),
         success: function(result) {
             removeAllChildNodes(destination);
             let comments = JSON.parse(result)['comments'];
@@ -92,13 +91,13 @@ function readPageComment(destination) {
 }
 
 function sendPageComment(nickname, comment, destination) {
-    let data = {"page_id":getPageID(),"comment":comment.value};
+    let data = { "page_id": getPageID(), "comment": comment.value };
     if (nickname.value != "") {
         data['nickname'] = nickname.value;
     }
     $.ajax({
         url: "https://28a2lzj9k1.execute-api.us-east-2.amazonaws.com/write",
-        type: "PUT",
+        type: "POST",
         crossDomain: true,
         contentType: "application/json",
         data: JSON.stringify(data),
@@ -110,10 +109,13 @@ function sendPageComment(nickname, comment, destination) {
 }
 
 function readPageTag(destination) {
+    let data = { "page_id": getPageID() };
     $.ajax({
-        url: "https://ts31palbs2.execute-api.us-west-2.amazonaws.com/read/" + getPageID(),
-        type: "GET",
+        url: "https://ts31palbs2.execute-api.us-west-2.amazonaws.com/read",
+        type: "POST",
         crossDomain: true,
+        contentType: "application/json",
+        data: JSON.stringify(data),
         success: function(result) {
             removeAllChildNodes(destination);
             let hashtags = JSON.parse(result)['hashtags'];
@@ -172,13 +174,13 @@ function sendPageTag(tag, destination) {
     if (validTag.length == 0) {
         return;
     }
-    let data = {"page_id":getPageID(),"hashtag":validTag};
+    let data = { "page_id": getPageID(), "hashtag": validTag };
     if (document.getElementById("pageTagTimeStamp").value.length > 0) {
         data.tag_timestamp = document.getElementById("pageTagTimeStamp").value;
     }
     $.ajax({
         url: "https://ts31palbs2.execute-api.us-west-2.amazonaws.com/write",
-        type: "PUT",
+        type: "POST",
         crossDomain: true,
         contentType: "application/json",
         data: JSON.stringify(data),
